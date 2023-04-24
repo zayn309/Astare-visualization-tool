@@ -1,1 +1,2 @@
-Astare visualization tool
+# overview
+A* Algorithm Pathfinding Simulator: This interactive tool lets you simulate the A* algorithm as it searches for the shortest path between two points. See how the algorithm uses heuristics to make decisions about which path to follow, and experiment with different starting points and barriers to see how it affects the outcome. With this tool, you can gain a deeper understanding of the A* algorithm and how it works.
