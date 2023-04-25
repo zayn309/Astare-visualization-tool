@@ -12,243 +12,27 @@
 #include <map>
 #include <set>
 
+#include "Grid.h"
+#include "Node.h"
+
 using std::cout;
 using std::endl;
 using std::priority_queue;
 
-
-SDL_Color WHITE = { 255, 255, 255, 255 };
-SDL_Color RED = { 255, 0, 0, 255 };
-SDL_Color GREEN = { 0, 255, 0, 255 };
-SDL_Color BLUE = { 0, 0, 255, 255 };
-SDL_Color YELLOW = { 255, 255, 0, 255 };
-SDL_Color BLACK = { 0, 0, 0, 255 };
-SDL_Color PURPLE = { 128, 0, 128, 255 };
-SDL_Color ORANGE = { 255, 165, 0, 255 };
-SDL_Color GREY = { 128, 128, 128, 255 };
-SDL_Color TURQUOISE = { 64, 224, 208, 255 };
-
-
-
-template<typename T>
-class Grid {
-private:
-
-    std::vector<std::vector<T*>> grid;
-    int rows;
-    int width;
-    int gap;
-
-    void drawGridLines(SDL_Renderer* renderer) {
-
-        SDL_SetRenderDrawColor(renderer, GREY.r, GREY.g, GREY.b, GREY.a);
-        for (int i = 0; i < rows; i++) {
-            SDL_RenderDrawLine(renderer, 0, i * gap, width, i * gap);
-        }
-
-        for (int i = 0; i < rows; i++) {
-            SDL_RenderDrawLine(renderer, i * gap, 0, i * gap, width);
-        }
-
-    }
-
-    void drawGridNodes(SDL_Renderer* renderer) {
-
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < rows; j++) {
-                grid[i][j]->draw(renderer);
-            }
-        }
-    }
-
-public:
-
-    Grid(int rows, int width) : rows(rows), width(width) {
-        reset();
-    }
-
-
-    void draw(SDL_Renderer* renderer) {
-        this->drawGridNodes(renderer);
-        this->drawGridLines(renderer);
-    }
-
-
-    std::vector<T*>& operator[](int index) {
-        return grid[index];
-    }
-    int get_rows() {
-        return this->rows;
-    }
-
-    int get_width() {
-        return this->width;
-    }
-
-    void set_neighbors() {
-        for (auto& row : grid) {
-            for (auto& node : row) {
-                node->update_neighbors(*this);
-            }
-        }
-    }
-
-    void reset() {
-
-        grid = std::vector<std::vector<T*>>(rows, std::vector<T*>(rows));
-        gap = int(floor(width / rows));
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < rows; j++) {
-                T* node = new T(i, j, gap, rows);
-                if (i == 0 || j == 0 || i == rows - 1 || j == rows - 1) {
-                    node->make_barrier();
-                    node->make_unmodifiable();
-                }
-
-                grid[i][j] = node;
-            }
-        }
-    }
-
-};
-
+extern SDL_Color WHITE     = { 255, 255, 255, 255 };
+extern SDL_Color RED       = { 255, 0, 0, 255 };
+extern SDL_Color GREEN     = { 0, 255, 0, 255 };
+extern SDL_Color BLUE      = { 0, 0, 255, 255 };
+extern SDL_Color YELLOW    = { 255, 255, 0, 255 };
+extern SDL_Color BLACK     = { 0, 0, 0, 255 };
+extern SDL_Color PURPLE    = { 128, 0, 128, 255 };
+extern SDL_Color ORANGE    = { 255, 165, 0, 255 };
+extern SDL_Color TURQUOISE = { 64, 224, 208, 255 };
+extern SDL_Color GREY      = { 128, 128, 128, 255 };
 
 bool operator==(const SDL_Color& a, const SDL_Color& b) {
     return a.r == b.r && a.g == b.g && a.b == b.b && a.a == b.a;
 }
-
-class Node
-{
-private:
-    int row;
-    int col;
-    int x;
-    int y;
-    int width;
-    SDL_Color color;
-    std::vector<Node*> neighbors;
-    int total_rows;
-    bool modifiable;
-
-
-public:
-    double G_score;
-    double F_score;
-
-    Node(int row, int col, int width, int total_rows)
-    {
-
-        this->row = row;
-        this->col = col;
-        this->x = row * width;
-        this->y = col * width;
-        this->color = WHITE;
-        this->neighbors.resize(0);
-        this->width = width;
-        this->total_rows = total_rows;
-        this->G_score = INT_MAX;
-        this->F_score = INT_MAX;
-        this->modifiable = true;
-
-    }
-
-    SDL_Point get_pos()
-    {
-        return { row, col };
-    }
-    bool is_modifiable() {
-        return this->modifiable;
-    }
-    bool is_open() {
-        return this->color == GREEN;
-    }
-    bool is_closed() const {
-        return this->color == RED;
-    }
-
-    bool is_barrier() const {
-        return this->color == BLACK;
-    }
-
-    bool is_start() const {
-        return this->color == ORANGE;
-    }
-
-    bool is_end() const {
-        return this->color == PURPLE;
-    }
-    void make_unmodifiable() {
-        this->modifiable = false;
-    }
-
-    void reset() {
-        this->color = WHITE;
-    }
-
-
-    void make_start() {
-        this->color = ORANGE;
-    }
-
-    void make_closed() {
-        this->color = RED;
-    }
-
-    void make_open() {
-        this->color = GREEN;
-    }
-
-    void make_barrier() {
-        this->color = BLACK;
-    }
-
-    void make_end() {
-        this->color = PURPLE;
-    }
-
-    void make_path() {
-        this->color = TURQUOISE;
-    }
-
-    void draw(SDL_Renderer* renderer) const {
-        SDL_Rect rect = { x, y, this->width, this->width };
-        SDL_SetRenderDrawColor(renderer, this->color.r, this->color.g, this->color.b, 255);
-        SDL_RenderFillRect(renderer, &rect);
-    }
-
-    void update_neighbors(Grid<Node> grid) {
-        neighbors.clear();
-        if (!this->is_barrier()) {
-
-            if (!grid[row + 1][col]->is_barrier()) { // DOWN
-                neighbors.push_back(grid[row + 1][col]);
-            }
-
-            if (!grid[row - 1][col]->is_barrier()) { // UP
-                neighbors.push_back(grid[row - 1][col]);
-            }
-
-            if (!grid[row][col + 1]->is_barrier()) { // RIGHT
-                neighbors.push_back(grid[row][col + 1]);
-            }
-
-            if (!grid[row][col - 1]->is_barrier()) { // LEFT
-                neighbors.push_back(grid[row][col - 1]);
-            }
-        }
-    }
-
-
-    std::vector<Node*>& get_neighbors() {
-        return this->neighbors;
-    }
-
-    bool operator<(const Node& other) const {
-        return false;
-    }
-
-
-};
 
 
 void drawScreen(SDL_Renderer* renderer, Grid<Node> grid) {
@@ -343,6 +127,7 @@ bool Astar(Node* start_node, Node* end_node, Grid<Node> grid, SDL_Renderer* rend
 }
 
 
+
 int main(int argc, char* argv[]) {
     SDL_SetMainReady();
     SDL_Init(SDL_INIT_VIDEO);
@@ -354,7 +139,7 @@ int main(int argc, char* argv[]) {
     Grid<Node> grid(ROWS, WIDTH);
 
 
-    SDL_Window* window = SDL_CreateWindow("A* algorithm visualizer", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH, WIDTH, 0);
+    SDL_Window* window = SDL_CreateWindow("A* algorithm visualizer", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH, WIDTH,0);
     SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, 0);
 
     Node* start = NULL;
