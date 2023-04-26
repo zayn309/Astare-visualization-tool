@@ -29,7 +29,7 @@ private:
     std::vector<Node*> neighbors;
     int total_rows;
     bool modifiable;
-
+    bool diagnol;
 
 public:
     double G_score;
@@ -56,6 +56,7 @@ public:
 
     void reset();
 
+    void activate_diagnol_moves();
 
     void make_start();
 

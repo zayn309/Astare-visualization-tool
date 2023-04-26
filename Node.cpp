@@ -14,6 +14,7 @@ Node::Node(int row, int col, int width, int total_rows)
     this->G_score = INT_MAX;
     this->F_score = INT_MAX;
     this->modifiable = true;
+    this->diagnol = false;
 
 }
 
@@ -49,6 +50,11 @@ void Node::make_unmodifiable() {
 
 void Node::reset() {
     this->color = WHITE;
+}
+
+void Node::activate_diagnol_moves()
+{
+    this->diagnol = true;
 }
 
 
@@ -100,6 +106,23 @@ void Node::update_neighbors(Grid<Node> grid) {
 
         if (!grid[row][col - 1]->is_barrier()) { // LEFT
             neighbors.push_back(grid[row][col - 1]);
+        }
+        if (this->diagnol) {
+            if (!grid[row + 1][col + 1]->is_barrier()) { // DOWN RIGHT
+                neighbors.push_back(grid[row + 1][col + 1]);
+            }
+
+            if (!grid[row - 1][col + 1]->is_barrier()) { // UP RIGHT
+                neighbors.push_back(grid[row - 1][col + 1]);
+            }
+
+            if (!grid[row + 1][col - 1]->is_barrier()) { // DOWN LEFT
+                neighbors.push_back(grid[row + 1][col - 1]);
+            }
+
+            if (!grid[row - 1][col - 1]->is_barrier()) { // UP LEFT
+                neighbors.push_back(grid[row - 1][col - 1]);
+            }
         }
     }
 }

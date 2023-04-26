@@ -59,7 +59,13 @@ public:
     int get_width() {
         return this->width;
     }
-
+    void set_diagnol() {
+        for (auto& row : grid) {
+            for (auto& node : row) {
+                node->activate_diagnol_moves();
+            }
+        }
+    }
     void set_neighbors() {
         for (auto& row : grid) {
             for (auto& node : row) {
